@@ -2,7 +2,7 @@
 
 A personal life + productivity app I'm building in Flutter.
 
-Designed to help manage:
+Designed to help manage: 
 • Bills  
 • Tasks  
 • Must-Dos  
