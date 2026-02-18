@@ -128,16 +128,22 @@ class _TodayScreenState extends State<TodayScreen> {
   // ---------- MUST DO ACTIONS ----------
   Future<void> _showMustDoMenu(MustDoItem item) async {
     final appState = context.read<AppState>();
+    final isOnToday = _dayKey(item.day) == _dayKey(DateTime.now());
 
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+
           children: [
             ListTile(
               title: const Text('Edit'),
               onTap: () => Navigator.pop(context, 'edit'),
+            ),
+            ListTile(
+              title: Text(isOnToday ? 'Move to Tomorrow' : 'Move to Today'),
+              onTap: () => Navigator.pop(context, 'move'),
             ),
             ListTile(
               title: const Text('Delete'),
@@ -180,6 +186,10 @@ class _TodayScreenState extends State<TodayScreen> {
       if (result != null && result.isNotEmpty) {
         await appState.updateMustDoTitle(item.id, result);
       }
+    } else if (action == 'move') {
+      final targetDay = isOnToday ? DateTime.now().add(const Duration(days: 1)) : DateTime.now();
+
+      await appState.updateMustDoDay(item.id, targetDay);
     } else if (action == 'delete') {
       await appState.deleteMustDo(item.id);
     }
@@ -188,6 +198,7 @@ class _TodayScreenState extends State<TodayScreen> {
   // ---------- TASK ACTIONS ----------
   Future<void> _showTaskMenu(TaskItem item) async {
     final appState = context.read<AppState>();
+    final isOnToday = _dayKey(item.day) == _dayKey(DateTime.now());
 
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -198,6 +209,10 @@ class _TodayScreenState extends State<TodayScreen> {
             ListTile(
               title: const Text('Edit'),
               onTap: () => Navigator.pop(context, 'edit'),
+            ),
+            ListTile(
+              title: Text(isOnToday ? 'Move to Tomorrow' : 'Move to Today'),
+              onTap: () => Navigator.pop(context, 'move'),
             ),
             ListTile(
               title: const Text('Delete'),
@@ -240,6 +255,11 @@ class _TodayScreenState extends State<TodayScreen> {
       if (result != null && result.isNotEmpty) {
         await appState.updateTaskTitle(item.id, result);
       }
+    } else if (action == 'move') {
+      final targetDay = isOnToday 
+      ? DateTime.now().add(const Duration(days: 1)) : DateTime.now();
+
+      await appState.updateTaskDay(item.id, targetDay);
     } else if (action == 'delete') {
       await appState.deleteTask(item.id);
     }
@@ -455,6 +475,14 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final selectedDay = _selectedDay;
+
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+
+    final monthName = months[selectedDay.month - 1];
+    final selectedDayLabel = '${selectedDay.day} $monthName ${selectedDay.year}';
+
     final bills = appState.bills;
 
     // Track B: filtered lists
@@ -491,6 +519,15 @@ class _TodayScreenState extends State<TodayScreen> {
                   onSelected: (_) => setState(() => _dayIndex = 1),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+
+            Text(
+              selectedDayLabel,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -612,7 +649,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   );
 
                   if (result != null && result.isNotEmpty) {
-                    await context.read<AppState>().addMustDo(result, day: _selectedDay);
+                    await context.read<AppState>().addMustDo(result, day: selectedDay);
                   }
                 },
                 child: const Text('+ Add'),
@@ -688,7 +725,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   );
 
                   if (result != null && result.isNotEmpty) {
-                    await context.read<AppState>().addTask(result, day: _selectedDay);
+                    await context.read<AppState>().addTask(result, day: selectedDay);
                   }
                 },
                 child: const Text('+ Add'),
