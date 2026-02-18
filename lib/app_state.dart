@@ -128,7 +128,7 @@ class AppState extends ChangeNotifier {
   // -------------------- MUST DOS --------------------
   int _mustDoIndexById(String id) => mustDos.indexWhere((m) => m.id == id);
 
-  Future<void> addMustDo(String title, {DateTime? day}) async {
+ Future<void> addMustDo(String title, {DateTime? day}) async {
     mustDos.add(MustDoItem(title: title, day: _asDay(day ?? today)));
     await _saveMustDos();
     notifyListeners();
@@ -146,6 +146,14 @@ class AppState extends ChangeNotifier {
     final idx = _mustDoIndexById(id);
     if (idx == -1) return;
     mustDos[idx].title = title;
+    await _saveMustDos();
+    notifyListeners();
+  }
+  Future<void> updateMustDoDay(String id, DateTime day) async {
+    final idx = _mustDoIndexById(id);
+    if (idx == -1) return;
+
+    mustDos[idx].day = _asDay(day);
     await _saveMustDos();
     notifyListeners();
   }
@@ -198,6 +206,16 @@ class AppState extends ChangeNotifier {
     final idx = _taskIndexById(id);
     if (idx == -1) return;
     tasks[idx].title = title;
+    await _saveTasks();
+    notifyListeners();
+  }
+
+  Future<void> updateTaskDay(String id, DateTime day) async {
+    final idx = _taskIndexById(id);
+    if (idx == -1) return;
+
+    tasks[idx].day = _asDay(day);
+
     await _saveTasks();
     notifyListeners();
   }
