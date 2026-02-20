@@ -128,7 +128,9 @@ class _TodayScreenState extends State<TodayScreen> {
   // ---------- MUST DO ACTIONS ----------
   Future<void> _showMustDoMenu(MustDoItem item) async {
     final appState = context.read<AppState>();
-    final isOnToday = _dayKey(item.day) == _dayKey(DateTime.now());
+    final isOnToday = _dayKey(item.day) == _dayKey(_selectedDay);
+
+
 
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -187,7 +189,7 @@ class _TodayScreenState extends State<TodayScreen> {
         await appState.updateMustDoTitle(item.id, result);
       }
     } else if (action == 'move') {
-      final targetDay = isOnToday ? DateTime.now().add(const Duration(days: 1)) : DateTime.now();
+      final targetDay = isOnToday ? _selectedDay.add(const Duration(days: 1)) : _selectedDay;
 
       await appState.updateMustDoDay(item.id, targetDay);
     } else if (action == 'delete') {
@@ -198,7 +200,8 @@ class _TodayScreenState extends State<TodayScreen> {
   // ---------- TASK ACTIONS ----------
   Future<void> _showTaskMenu(TaskItem item) async {
     final appState = context.read<AppState>();
-    final isOnToday = _dayKey(item.day) == _dayKey(DateTime.now());
+    final isOnToday = _dayKey(item.day) == _dayKey(_selectedDay);
+
 
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -256,8 +259,7 @@ class _TodayScreenState extends State<TodayScreen> {
         await appState.updateTaskTitle(item.id, result);
       }
     } else if (action == 'move') {
-      final targetDay = isOnToday 
-      ? DateTime.now().add(const Duration(days: 1)) : DateTime.now();
+      final targetDay = isOnToday ? _selectedDay.add(const Duration(days: 1)) : _selectedDay;
 
       await appState.updateTaskDay(item.id, targetDay);
     } else if (action == 'delete') {
@@ -488,7 +490,11 @@ class _TodayScreenState extends State<TodayScreen> {
     // Track B: filtered lists
     final mustDos = appState.mustDosForDay(selectedDay);
     final tasks = appState.tasksForDay(selectedDay);
-    
+    final completedMustDos = mustDos.where((m) => m.done).length;
+    final completedTasks = tasks.where((t) => t.done).length;
+    final totalItems = mustDos.length + tasks.length;
+    final completedItems = completedMustDos + completedTasks;
+    final progress = totalItems == 0 ? 0.0 : completedItems / totalItems;
     final balanceText = appState.actualBalance == null
         ? 'Not set'
         : '£${appState.actualBalance!.toStringAsFixed(2)}';
@@ -530,6 +536,33 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // ---------- PROGRESS ----------
+            
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    border: Border.all(color: Colors.grey),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'PROGRESS',
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      Text('$completedItems / $totalItems completed'),
+      const SizedBox(height: 8),
+      LinearProgressIndicator(value: progress),
+    ],
+  ),
+),
+
+const SizedBox(height: 16),
+
 
             // ---------- BALANCE CARD ----------
             Container(
